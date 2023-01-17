@@ -170,3 +170,28 @@ endfunction()
 define_pkg_config_file(shaderc -lshaderc_shared)
 define_pkg_config_file(shaderc_static "-lshaderc ${EXTRA_STATIC_PKGCONFIG_LIBS} -lshaderc_util")
 define_pkg_config_file(shaderc_combined -lshaderc_combined)
+
+
+function(get_all_targets var)
+  set(targets)
+  get_all_targets_recursive(targets ${CMAKE_CURRENT_SOURCE_DIR})
+  set(${var} ${targets} PARENT_SCOPE)
+endfunction()
+
+macro(get_all_targets_recursive targets dir)
+  get_property(subdirectories DIRECTORY ${dir} PROPERTY SUBDIRECTORIES)
+  foreach(subdir ${subdirectories})
+      get_all_targets_recursive(${targets} ${subdir})
+  endforeach()
+
+  get_property(current_targets DIRECTORY ${dir} PROPERTY BUILDSYSTEM_TARGETS)
+  list(APPEND ${targets} ${current_targets})
+endmacro()
+
+
+get_all_targets(all_targets)
+message("All targets: ${all_targets}")
+
+
+set_property(TARGET ${all_targets} PROPERTY
+MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
